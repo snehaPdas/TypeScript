@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            background-size: cover;
+             background-image: url("dash.webp");
+            margin: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+        }
+
+        #main-header {
+            background-color: #333;
+            color: #ceced8;
+            padding-top: 30px;
+            min-height: 70px;
+            border-bottom: #dfe1e4 3px solid;
+        }
+
+        #main-header h1 {
+            text-align: center;
+            text-transform: uppercase;
+            margin: 0;
+            font-size: 24px;
+        }
+
+        #main {
+            margin-top: 30px;
+        }
+
+        .actions {
+            margin-bottom: 20px;
+        }
+
+        .actions button {
+            background-color: #606675;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid #0a0a0a;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #606675;
+        }
+        td{
+           background-color: rgb(172, 196, 196);
+        }
+
+        .form-container {
+            display: none;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        .form-container input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #bcd1e7;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .form-container button:hover {
+            background-color: #606675;
+        }
+
+        .close-btn {
+            background-color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header id="main-header">
+        <div class="container">
+            <h1>Admin Panel</h1>
+        </div>
+    </header>
+    <div id="main" class="container">
+        <div class="actions">
+            <button id="add-employee" onclick="openForm()">Add Employee</button>
+            <button id="logout" onclick="logout()">Logout</button>
+        </div>
+        <table id="employee-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th>Date of Birth</th>
+                    <th>Date of Joining</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            </tbody>
+        </table>
+
+        <div class="form-container" id="employee-form-container">
+            <h2 id="form-title">Add Employee</h2>
+            <form id="employee-form">
+                <input type="hidden" id="employee-id">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" required>
+
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+
+                <label for="mobile">Mobile</label>
+                <input type="text" id="mobile" name="mobile" required>
+
+                <label for="dob">Date of Birth</label>
+                <input type="date" id="dob" name="dob">
+
+                <label for="doj">Date of Joining</label>
+                <input type="date" id="doj" name="doj">
+
+                <button type="submit">Save</button>
+                <button type="button" class="close-btn" onclick="closeForm()">Cancel</button>
+            </form>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadEmployees();
+
+            // document.getElementById('add-employee').addEventListener('click', () => {
+            //     console.log('Add Employee button clicked');
+            //     openForm();
+            // });
+
+            document.getElementById('employee-form').addEventListener('submit', async (event) => {
+                event.preventDefault();
+                await saveEmployee();
+                closeForm();
+                await loadEmployees();
+            });
+        });
+
+        async function loadEmployees() {
+            const response = await fetch('/employee');
+            const data = await response.json();
+            const tableBody = document.getElementById('employee-table').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = ''; 
+
+            data.data.forEach(employee => {
+                const row = tableBody.insertRow();
+
+                row.insertCell(0).textContent = employee._id;
+                row.insertCell(1).textContent = employee.name;
+                row.insertCell(2).textContent = employee.email;
+                row.insertCell(3).textContent = employee.mobile;
+                row.insertCell(4).textContent = employee.dob || 'N/A';
+                row.insertCell(5).textContent = employee.doj || 'N/A';
+
+                const actionsCell = row.insertCell(6);
+                actionsCell.innerHTML = `
+                    <button onclick="editEmployee('${employee._id}')">Edit</button>
+                    <button onclick="deleteEmployee('${employee._id}')">Delete</button>
+                `;
+            });
+        }
+
+        function openForm(employee = null) {
+
+            const formContainer = document.getElementById('employee-form-container');
+            formContainer.style.display = 'block';
+            if (employee) {
+                document.getElementById('form-title').textContent = 'Edit Employee';
+                document.getElementById('employee-id').value = employee._id;
+                document.getElementById('name').value = employee.name;
+                document.getElementById('email').value = employee.email;
+                document.getElementById('mobile').value = employee.mobile;
+                document.getElementById('dob').value = employee.dob;
+                document.getElementById('doj').value = employee.doj;
+            } else {
+                document.getElementById('form-title').textContent = 'Add Employee';
+                document.getElementById('employee-form').reset();
+            }
+        }
+
+        function closeForm() {
+            const formContainer = document.getElementById('employee-form-container');
+            formContainer.style.display = 'none';
+        }
+
+        async function saveEmployee() {
+            const id = document.getElementById('employee-id').value;
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const mobile = document.getElementById('mobile').value;
+            const dob = document.getElementById('dob').value;
+            const doj = document.getElementById('doj').value;
+
+            const employee = { name, email, mobile, dob, doj };
+            
+            if (id) {
+            
+                const response = await fetch(`/employee/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(employee)
+                });
+                if (!response.ok) {
+                    console.error('Failed to update employee');
+                }
+            } else {
+                
+                const response = await fetch('/employee', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(employee)
+                });
+                if (!response.ok) {
+                    console.error('Failed to add employee');
+                }
+            }
+        }
+
+        async function editEmployee(id) {
+            
+            const response = await fetch(`/employee/${id}`);
+            const data = await response.json();
+            openForm(data.data);
+        }
+
+        async function deleteEmployee(id) {
+            const response = await fetch(`/employee/${id}`, {
+                method: 'DELETE'
+            });
+            if (response.ok) {
+                await loadEmployees();
+            } else {
+                console.error('Failed to delete employee');
+            }
+        }
+
+
+        async function logout() {
+    try {
+        const response = await fetch('/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            
+            window.location.href = '/';
+        } else {
+            console.error('Failed to logout');
+        }
+    } catch (error) {
+        console.error('Error during logout:', error);
+    }
+}
+
+    </script>
+</body>
+</html>

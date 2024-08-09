@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #202526;
+            background-image: url("admin3.jpeg");
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            background-color: rgb(84, 89, 107);
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            width: 300px;
+        }
+
+        .login-container h2 {
+            margin-bottom: 20px;
+        }
+
+        .login-container label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .login-container input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .login-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #0c2516;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .login-container button:hover {
+            background-color: #0056b3;
+        }
+
+        #error-message {
+            color: rgb(133, 4, 4);
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Login</h2>
+        <form id="login-form">
+            <label for="username">Username</label>
+            <input type="email" id="username" name="email" required>
+            
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+            
+            <button type="submit">Login</button>
+        </form> 
+        <p id="error-message"></p>
+    </div>
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const email = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                window.location.href = result.redirectUrl;
+            } else {
+                document.getElementById('error-message').textContent = result.message;
+            }
+        });
+    </script>
+</body>
+</html>
